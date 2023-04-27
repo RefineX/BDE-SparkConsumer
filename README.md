@@ -20,4 +20,4 @@
 1. Clone this repository from IntelliJ Idea IDE (Create project with "Get from VCS" feature using HTTPS GIT URL)
    ![Alt text](docs/spark_consumer_clone.png?raw=true)
 2. Verify if Producer is running without any issues and sending data to the Kafka Topic
-3. Build and Run the sbt project (or Main.scala) in IDE
+3. Build and Run the sbt project (or Main.scala) in the IDE
