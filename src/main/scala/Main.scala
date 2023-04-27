@@ -1,54 +1,49 @@
 import org.apache.spark.sql.SparkSession
+
 import java.util.Properties
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.apache.spark.sql.functions.{col, from_json}
+import org.apache.spark.sql.types.{StringType, StructType}
+
 import scala.collection.JavaConverters._
 
 object Main {
   def main(args: Array[String]): Unit = {
-    println("Hello world!")
 
+    // Initialize Spark Session
     val spark = SparkSession.builder
       .master("local[*]")
       .appName("Spark Word Count")
       .getOrCreate()
-    spark.sparkContext.setLogLevel("ERROR")
-    val lines = spark.sparkContext.parallelize(
-      Seq("Spark Intellij Idea Scala test one",
-        "Spark Intellij Idea Scala test two",
-        "Spark Intellij Idea Scala test three"))
-
-    val counts = lines
-      .flatMap(line => line.split(" "))
-      .map(word => (word, 1))
-      .reduceByKey(_ + _)
-
-    counts.foreach(println)
-
-    // Initialize consumer properties
-    val kafkaConsumerProps: Properties = {
-      val props = new Properties()
-      props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
-      props.put(ConsumerConfig.GROUP_ID_CONFIG, "myGroupId")
-      props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getName)
-      props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[StringDeserializer].getName)
-      props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-      props
-    }
-
-    val consumer = new KafkaConsumer[String, String](kafkaConsumerProps)
-
-    consumer.subscribe(java.util.Collections.singletonList("myTopic"))
-
-    while (true) {
-      val records = consumer.poll(java.time.Duration.ofMillis(100))
-
-      for (record <- records.asScala) {
-        val key = record.key()
-        val value = record.value()
-        println(s"Received message with key: $key and value: $value")
-      }
-    }
+    // Create kafka dataframe
+    var df = spark
+      .readStream
+      .format("kafka")
+      .option("kafka.bootstrap.servers", "localhost:9092")
+      .option("subscribe", "myTopic")
+      .option("startingOffsets", "earliest")
+      .load()
+    // Print dataframe schema
+    df.printSchema()
+    // Select value from dataframe
+    df = df.selectExpr("CAST(value AS STRING)")
+    // Define schema of value
+    val json_schema = new StructType()
+      .add("id", StringType)
+      .add("first_name", StringType)
+      .add("last_name", StringType)
+      .add("email", StringType)
+      .add("gender", StringType)
+      .add("ip_address", StringType)
+    // Apply schema to value
+    df = df.select(from_json(col("value"), json_schema).as("data")).select("data.*")
+    // Write dataframe to output
+    df.writeStream
+      .format("console")
+      .outputMode("append")
+      .start()
+      .awaitTermination()
 
   }
 }
