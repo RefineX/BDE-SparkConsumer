@@ -43,4 +43,4 @@ bin/
 *.class
 
 # project related
-DimensionTables/*
+DimensionTables/
