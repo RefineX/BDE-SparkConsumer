@@ -1,12 +1,6 @@
 import org.apache.spark.sql.SparkSession
-
-import java.util.Properties
-import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
-import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.sql.functions.{col, from_json}
-import org.apache.spark.sql.types.{StringType, StructType}
-
-import scala.collection.JavaConverters._
+import org.apache.spark.sql.types.{IntegerType, StringType, TimestampType, DoubleType, StructType}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -14,31 +8,37 @@ object Main {
     // Initialize Spark Session
     val spark = SparkSession.builder
       .master("local[*]")
-      .appName("Spark Word Count")
+      .appName("Bank Transaction Consumer")
       .getOrCreate()
-    // Create kafka dataframe
+
+    // Create Kafka DataFrame
     var df = spark
       .readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
-      .option("subscribe", "myTopic")
+      .option("subscribe", "transactions")
       .option("startingOffsets", "earliest")
       .load()
-    // Print dataframe schema
+
+    // Print DataFrame schema
     df.printSchema()
-    // Select value from dataframe
+
+    // Select value from DataFrame
     df = df.selectExpr("CAST(value AS STRING)")
+
     // Define schema of value
     val json_schema = new StructType()
-      .add("id", StringType)
-      .add("first_name", StringType)
-      .add("last_name", StringType)
-      .add("email", StringType)
-      .add("gender", StringType)
-      .add("ip_address", StringType)
+      .add("transaction_id", StringType)
+      .add("account_id", IntegerType)
+      .add("branch_id", IntegerType)
+      .add("channel_id", IntegerType)
+      .add("transaction_timestamp", TimestampType)
+      .add("transaction_amount", DoubleType)
+
     // Apply schema to value
     df = df.select(from_json(col("value"), json_schema).as("data")).select("data.*")
-    // Write dataframe to output
+
+    // Write DataFrame to output
     df.writeStream
       .format("console")
       .outputMode("append")
