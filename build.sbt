@@ -15,3 +15,5 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % "2.4.8",
   "org.apache.spark" %% "spark-sql-kafka-0-10" % "2.4.8"
 )
+
+libraryDependencies += "com.github.javafaker" % "javafaker" % "1.0.2"
