@@ -22,11 +22,13 @@
    
    Once added, configure system environment variable `%HADOOP_HOME%` as `C:\hadoop`.
 
+
 #### Steps to run the consumer:
-1. Clone this repository from IntelliJ Idea IDE (Create project with "Get from VCS" feature using HTTPS GIT URL)
+1. Clone this repository from IntelliJ Idea IDE. (Create project with "Get from VCS" feature using HTTPS GIT URL)
    ![Alt text](docs/spark_consumer_clone.png?raw=true)
 2. Check if the `%HADOOP_HOME%` variable is set in the IDE terminal as follows:
 
    ![Alt text](docs/hadoop_home.jpeg?raw=true)
-2. Verify if Producer is running without any issues and sending data to the Kafka Topic
-3. Build and Run the sbt project (or Main.scala) in the IDE
+3. Verify if Producer is running without any issues and sending data to the Kafka Topic.
+4. Run the DimensionTablesGenerator.scala file once. This will generate CSV files inside the DimensionTables folder. Once these files are created, you do not have to run this step again.
+5. Build and Run the sbt project (or KPIGenerator.scala) in the IDE.
